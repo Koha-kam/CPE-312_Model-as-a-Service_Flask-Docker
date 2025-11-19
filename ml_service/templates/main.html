@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>California Housing — ML Predictor</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background: #edf2f7;
+      max-width: 920px;
+      margin: 24px auto;
+      padding: 0 16px;
+      color: #1e293b;
+      font-family: Inter, system-ui, sans-serif;
+      transition: 0.3s;
+    }
+
+    h1 {
+      margin-bottom: 4px;
+      font-size: 34px;
+    }
+
+    .sub {
+      color: #555;
+      margin-top: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+      gap: 14px 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.65);
+      border-radius: 20px;
+      padding: 32px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      border: 1px solid #6366f1;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .help {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    input[type="number"] {
+      width: 80%;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid #6366f1;
+      background: rgba(255,255,255,0.9);
+      transition: 0.2s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.3);
+    }
+
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+      font-size: 15px;
+    }
+
+    .primary {
+      background: #6366f1;
+      color: white;
+    }
+
+    .ghost {
+      background: rgba(99,102,241,0.12); 
+      color: #6366f1;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .err {
+      color: #b91c1c;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 12px;
+    }
+
+    footer {
+      margin-top: 24px;
+      color: #64748b;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>California Housing — ML Predictor</h1>
+  <p class="sub">
+    Enter values and click <b>Predict</b>. The model estimates median house value (in $100,000s).
+  </p>
+
+  <div class="card">
+  <form id="form" class="grid" autocomplete="off">
+  
+    <div>
+      <label for="MedInc">MedInc (Median income, $10k units)</label>
+      <input id="MedInc" name="MedInc" type="number" step="0.1" min="0" max="25" placeholder="e.g., 8.3" required />
+      <div class="help">Typical 0–15 (e.g., 8.3 means $83,000).</div>
+    </div>
+
+    <div>
+      <label for="HouseAge">HouseAge (years)</label>
+      <input id="HouseAge" name="HouseAge" type="number" step="1" min="1" max="100" placeholder="e.g., 25" required />
+      <div class="help">Average age of houses in the block.</div>
+    </div>
+
+    <div>
+      <label for="AveRooms">AveRooms (avg rooms per dwelling)</label>
+      <input id="AveRooms" name="AveRooms" type="number" step="0.1" min="1" max="15" placeholder="e.g., 6.0" required />
+      <div class="help">Total rooms / total households.</div>
+    </div>
+
+    <div>
+      <label for="AveBedrms">AveBedrms (avg bedrooms per dwelling)</label>
+      <input id="AveBedrms" name="AveBedrms" type="number" step="0.1" min="0.5" max="6" placeholder="e.g., 1.0" required />
+      <div class="help">Total bedrooms / total households.</div>
+    </div>
+
+    <div>
+      <label for="Population">Population (people)</label>
+      <input id="Population" name="Population" type="number" step="1" min="1" max="50000" placeholder="e.g., 1200" required />
+      <div class="help">Block group population.</div>
+    </div>
+
+    <div>
+      <label for="AveOccup">AveOccup (avg occupants per household)</label>
+      <input id="AveOccup" name="AveOccup" type="number" step="0.1" min="0.5" max="10" placeholder="e.g., 3.0" required />
+      <div class="help">Population / households.</div>
+    </div>
+
+    <div>
+      <label for="Latitude">Latitude</label>
+      <input id="Latitude" name="Latitude" type="number" step="0.01" min="32" max="42" placeholder="e.g., 34.20" required />
+      <div class="help">Approx. California 32–42.</div>
+    </div>
+
+    <div>
+      <label for="Longitude">Longitude</label>
+      <input id="Longitude" name="Longitude" type="number" step="0.01" min="-125" max="-114" placeholder="e.g., -118.30" required />
+      <div class="help">Approx. California −125 to −114.</div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="ghost" id="sample">Use sample values</button>
+      <button type="submit" class="primary">Predict</button>
+      <button type="reset" class="ghost">Reset</button>
+    </div>
+
+  </form>
+  </div>
+
+  <div id="output" class="result" style="display:none;"></div>
+
+  <footer>
+    <div class="muted">
+      Feature order sent to the API:  
+      [MedInc, HouseAge, AveRooms, AveBedrms, Population, AveOccup, Latitude, Longitude]
+    </div>
+  </footer>
+
+  <script>
+    const FEATURES = [
+      "MedInc",
+      "HouseAge",
+      "AveRooms",
+      "AveBedrms",
+      "Population",
+      "AveOccup",
+      "Latitude",
+      "Longitude"
+    ];
+
+    const sample = {
+      MedInc: 8.3,
+      HouseAge: 25,
+      AveRooms: 6.0,
+      AveBedrms: 1.0,
+      Population: 1200,
+      AveOccup: 3.0,
+      Latitude: 34.2,
+      Longitude: -118.3
+    };
+
+    document.getElementById("sample").addEventListener("click", () => {
+      for (const [k, v] of Object.entries(sample)) {
+        document.getElementById(k).value = v;
+      }
+    });
+
+    document.getElementById("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const vals = [];
+      const output = document.getElementById("output");
+
+      try {
+        for (const f of FEATURES) {
+          const el = document.getElementById(f);
+          if (!el || el.value === "") {
+            throw new Error(`Missing value: ${f}`);
+          }
+          vals.push(parseFloat(el.value));
+        }
+
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ features: vals })
+        });
+
+        const data = await res.json();
+
+        output.style.display = "block";
+
+        if (!res.ok) {
+          output.innerHTML = `
+            <div class="err"><b>Error:</b> ${data.error || "Request failed"}</div>
+          `;
+          return;
+        }
+
+        const y = Number(data.prediction);
+
+        output.innerHTML = `
+          <b>Prediction:</b> ${isFinite(y) ? y.toFixed(3) : data.prediction}
+          <div class="muted">Inputs: [${vals.join(", ")}]</div>
+        `;
+
+      } catch (err) {
+        output.style.display = "block";
+        output.innerHTML = `
+          <div class="err"><b>Validation error:</b> ${err.message}</div>
+        `;
+      }
+    });
+  </script>
+
+</body>
+</html>
